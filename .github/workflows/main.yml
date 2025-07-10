@@ -34,7 +34,7 @@ jobs:
           sudo rm -rf /opt/app/DjangoAIBackend/*
           sudo unzip -o ~/app.zip -d /opt/app/DjangoAIBackend
           sudo cd /opt/app/DjangoAIBackend
-          sudo source /opt/venv/bin/activate
+          sudo source /opt/virtual-envs/venv-ai-be/bin/activate
           sudo pip install -r requirements.txt
           sudo systemctl restart django-ai-backend.service
           sudo systemctl restart nginx
