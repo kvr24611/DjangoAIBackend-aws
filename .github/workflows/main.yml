@@ -1,0 +1,41 @@
+name: Deploy Python App to EC2
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Zip app files
+      run: zip -r app.zip . -x "*.git*" ".github/*"
+
+    - name: Copy zip to EC2 using appleboy/scp
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "app.zip"
+        target: "/home/${{ secrets.EC2_USER }}/"
+
+    - name: SSH into EC2 to unzip and deploy
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          sudo rm -rf /opt/app/DjangoAIBackend/*
+          sudo unzip -o ~/app.zip -d /opt/app/DjangoAIBackend
+          sudo cd /opt/app/DjangoAIBackend
+          sudo source /opt/venv/bin/activate
+          sudo pip install -r requirements.txt
+          sudo systemctl restart django-app.service
+          sudo systemctl restart nginx
+          rm -rf /home/ec2-user/app.zip
